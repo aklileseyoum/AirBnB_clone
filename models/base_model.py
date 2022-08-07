@@ -14,10 +14,15 @@ class BaseModel:
         attributes and functions for BaseModel class
     """
 
-    def __init__(self):
-        self.id = str(uuid4())
-        self.created_at = datetime.utcnow()
-        self.updated_at = created_at
+    def __init__(self, *args, **kwargs):
+        """
+            instantiation of new BaseModel Class
+        """
+        if kwargs:
+            self.__set_attributes(kwargs)
+        else:
+            self.id = str(uuid4())
+            self.created_at = datetime.utcnow()
 
     def save(self):
         self.updated_at = datetime.utcnow()
