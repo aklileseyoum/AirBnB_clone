@@ -1,5 +1,13 @@
 #!/usr/bin/python3
 
+import json
+from models import base_model, amenity, city, place, review, state, user
+from datetime import datetime
+
+strptime = datetime.strptime
+to_json = base_model.BaseModel.to_json
+
+
 class FileStorage:
     __file_path = './dev/file.json'
     __objects = {}
