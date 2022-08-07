@@ -6,6 +6,8 @@ BaseModel Class of Models Module
 
 from uuid import uuid4
 from datetime import datetime
+from engine.file_storage.py import storage
+
 
 
 
@@ -26,6 +28,8 @@ class BaseModel:
 
     def save(self):
         self.updated_at = datetime.utcnow()
+        storage.new(self)
+        storage.save()
 
     def to_json(self, saving_file_storage=False):
         """
