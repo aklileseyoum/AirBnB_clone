@@ -19,9 +19,6 @@ class BaseModel:
         self.created_at = datetime.utcnow()
         self.updated_at = created_at
 
-    def __str__(self):
-        return "[{}] ({}) ({})".format(type(self).__name__, self.id, self.__dict__)
-
     def save(self):
         self.updated_at = datetime.utcnow()
 
@@ -41,3 +38,7 @@ class BaseModel:
         if not saving_file_storage and obj_class == 'User':
             bm_dict.pop('password', None)
         return(bm_dict)
+
+    def __str__(self):
+        return "[{}] ({}) ({})".format(type(self).__name__, self.id, self.__dict__)
+
