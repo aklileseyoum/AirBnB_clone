@@ -1,140 +1,64 @@
 #!/usr/bin/python3
-"""
-Unit Test for State Class
-"""
-from datetime import datetime
-import inspect
-import json
-import models
-from os import environ, stat
-import pep8
+"""Unit tests for class State"""
 import unittest
+import pep8
+import os
+from models.base_model import BaseModel
+from models.state import State
 
-State = models.state.State
-BaseModel = models.base_model.BaseModel
-STORAGE_TYPE = environ.get('HBNB_TYPE_STORAGE')
 
-
-class TestStateDocs(unittest.TestCase):
-    """Class for testing State docs"""
-
-    all_funcs = inspect.getmembers(State, inspect.isfunction)
+class TestState(unittest.TestCase):
+    """testing class State"""
+    @classmethod
+    def setUp(cls):
+        """setup instance"""
+        cls.s1 = State()
+        cls.s1.name = "VA"
 
     @classmethod
-    def setUpClass(cls):
-        print('\n\n.................................')
-        print('..... Testing Documentation .....')
-        print('........   State Class   ........')
-        print('.................................\n\n')
-
-    def test_doc_file(self):
-        """... documentation for the file"""
-        expected = '\nState Class from Models Module\n'
-        actual = models.state.__doc__
-        self.assertEqual(expected, actual)
-
-    def test_doc_class(self):
-        """... documentation for the class"""
-        expected = 'State class handles all application states'
-        actual = State.__doc__
-        self.assertEqual(expected, actual)
-
-    def test_all_function_docs(self):
-        """... tests for ALL DOCS for all functions in db_storage file"""
-        all_functions = TestStateDocs.all_funcs
-        for function in all_functions:
-            self.assertIsNotNone(function[1].__doc__)
-
-    def test_pep8_state(self):
-        """... state.py conforms to PEP8 Style"""
-        pep8style = pep8.StyleGuide(quiet=True)
-        errors = pep8style.check_files(['models/state.py'])
-        self.assertEqual(errors.total_errors, 0, errors.messages)
-
-    def test_file_is_executable(self):
-        """... tests if file has correct permissions so user can execute"""
-        file_stat = stat('models/state.py')
-        permissions = str(oct(file_stat[0]))
-        actual = int(permissions[5:-2]) >= 5
-        self.assertTrue(actual)
-
-
-class TestStateInstances(unittest.TestCase):
-    """testing for class instances"""
-
-    @classmethod
-    def setUpClass(cls):
-        print('\n\n.................................')
-        print('....... Testing Functions .......')
-        print('.........  State Class  .........')
-        print('.................................\n\n')
-
-    def setUp(self):
-        """initializes new state for testing"""
-        self.state = State()
-
-    def test_instantiation(self):
-        """... checks if State is properly instantiated"""
-        self.assertIsInstance(self.state, State)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_to_string(self):
-        """... checks if BaseModel is properly casted to string"""
-        my_str = str(self.state)
-        my_list = ['State', 'id', 'created_at']
-        actual = 0
-        for sub_str in my_list:
-            if sub_str in my_str:
-                actual += 1
-        self.assertTrue(3 == actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_instantiation_no_updated(self):
-        """... should not have updated attribute"""
-        my_str = str(self.state)
-        actual = 0
-        if 'updated_at' in my_str:
-            actual += 1
-        self.assertTrue(0 == actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_updated_at(self):
-        """... save function should add updated_at attribute"""
-        self.state.save()
-        actual = type(self.state.updated_at)
-        expected = type(datetime.now())
-        self.assertEqual(expected, actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_to_json(self):
-        """... to_json should return serializable dict object"""
-        self.state_json = self.state.to_json()
-        actual = 1
+    def tearDown(cls):
+        """delete instance"""
+        del cls.s1
         try:
-            serialized = json.dumps(self.state_json)
-        except:
-            actual = 0
-        self.assertTrue(1 == actual)
+            os.remove("file.json")
+        except FileNotFoundError:
+            pass
 
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_json_class(self):
-        """... to_json should include class key with value State"""
-        self.state_json = self.state.to_json()
-        actual = None
-        if self.state_json['__class__']:
-            actual = self.state_json['__class__']
-        expected = 'State'
-        self.assertEqual(expected, actual)
+    def test_style_check(self):
+        """tests pep8 style"""
+        style = pep8.StyleGuide(quiet=True)
+        p = style.check_files(['models/state.py'])
+        self.assertEqual(p.total_errors, 0, "fix pep8")
 
-    def test_name_attribute(self):
-        """... add name attribute"""
-        self.state.name = "betty"
-        if hasattr(self.state, 'name'):
-            actual = self.state.name
-        else:
-            acual = ''
-        expected = "betty"
-        self.assertEqual(expected, actual)
+    def test_is_subclass(self):
+        """check that class of instance is a subclass of BaseModel"""
+        self.assertTrue(issubclass(self.s1.__class__, BaseModel), True)
+
+    def test_checking_for_functions(self):
+        """check docstrings for existing functions"""
+        self.assertIsNotNone(State.__doc__)
+
+    def test_has_attributes(self):
+        """check that instance has all class attributes"""
+        self.assertTrue('id' in self.s1.__dict__)
+        self.assertTrue('created_at' in self.s1.__dict__)
+        self.assertTrue('updated_at' in self.s1.__dict__)
+        self.assertTrue('name' in self.s1.__dict__)
+
+    def test_attribute_type(self):
+        """check that all class attribute have appropriate values"""
+        self.assertIsInstance(self.s1, State)
+        self.assertIsInstance(self.s1, BaseModel)
+        self.assertEqual(type(self.s1.name), str)
+
+    def test_save(self):
+        """check save method"""
+        self.s1.save()
+        self.assertNotEqual(self.s1.created_at, self.s1.updated_at)
+
+    def test_to_dict(self):
+        """check to_dict method"""
+        self.assertEqual('to_dict' in dir(self.s1), True)
 
 if __name__ == '__main__':
-    unittest.main
+    unittest.main()

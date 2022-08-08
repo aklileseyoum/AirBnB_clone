@@ -1,140 +1,73 @@
 #!/usr/bin/python3
-"""
-Unit Test for User Class
-"""
-from datetime import datetime
-import inspect
-import json
-import models
-from os import environ, stat
-import pep8
+"""Unit tests for class User"""
 import unittest
+import pep8
+import os
+from models.base_model import BaseModel
+from models.user import User
 
-User = models.user.User
-BaseModel = models.base_model.BaseModel
-STORAGE_TYPE = environ.get('HBNB_TYPE_STORAGE')
 
-
-class TestUserDocs(unittest.TestCase):
-    """Class for testing User Class docs"""
-
-    all_funcs = inspect.getmembers(User, inspect.isfunction)
+class TestAdditionalClasses(unittest.TestCase):
+    """testing class User"""
+    @classmethod
+    def setUp(cls):
+        """setup instance"""
+        cls.u1 = User()
+        cls.u1.first_name = "Betty"
+        cls.u1.last_name = "Holberton"
+        cls.u1.email = "airbnb@holbertonshool.com"
+        cls.u1.password = "root"
 
     @classmethod
-    def setUpClass(cls):
-        print('\n\n.................................')
-        print('..... Testing Documentation .....')
-        print('........   User  Class   ........')
-        print('.................................\n\n')
-
-    def test_doc_file(self):
-        """... documentation for the file"""
-        expected = '\nUser Class from Models Module\n'
-        actual = models.user.__doc__
-        self.assertEqual(expected, actual)
-
-    def test_doc_class(self):
-        """... documentation for the class"""
-        actual = User.__doc__
-        self.assertIsNotNone(actual)
-
-    def test_all_function_docs(self):
-        """... tests for ALL DOCS for all functions in db_storage file"""
-        all_functions = TestUserDocs.all_funcs
-        for function in all_functions:
-            self.assertIsNotNone(function[1].__doc__)
-
-    def test_pep8_user(self):
-        """... user.py conforms to PEP8 Style"""
-        pep8style = pep8.StyleGuide(quiet=True)
-        errors = pep8style.check_files(['models/user.py'])
-        self.assertEqual(errors.total_errors, 0, errors.messages)
-
-    def test_file_is_executable(self):
-        """... tests if file has correct permissions so user can execute"""
-        file_stat = stat('models/user.py')
-        permissions = str(oct(file_stat[0]))
-        actual = int(permissions[5:-2]) >= 5
-        self.assertTrue(actual)
-
-
-class TestUserInstances(unittest.TestCase):
-    """testing for class instances"""
-
-    @classmethod
-    def setUpClass(cls):
-        print('\n\n.................................')
-        print('....... Testing Functions .......')
-        print('.........  User  Class  .........')
-        print('.................................\n\n')
-
-    def setUp(self):
-        """initializes new user for testing"""
-        self.user = User()
-
-    def test_instantiation(self):
-        """... checks if User is properly instantiated"""
-        self.assertIsInstance(self.user, User)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_to_string(self):
-        """... checks if BaseModel is properly casted to string"""
-        my_str = str(self.user)
-        my_list = ['User', 'id', 'created_at']
-        actual = 0
-        for sub_str in my_list:
-            if sub_str in my_str:
-                actual += 1
-        self.assertTrue(3 == actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_instantiation_no_updated(self):
-        """... should not have updated attribute"""
-        self.user = User()
-        my_str = str(self.user)
-        actual = 0
-        if 'updated_at' in my_str:
-            actual += 1
-        self.assertTrue(0 == actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_updated_at(self):
-        """... save function should add updated_at attribute"""
-        self.user.save()
-        actual = type(self.user.updated_at)
-        expected = type(datetime.now())
-        self.assertEqual(expected, actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_to_json(self):
-        """... to_json should return serializable dict object"""
-        self.user_json = self.user.to_json()
-        actual = 1
+    def tearDown(cls):
+        """delete instance"""
+        del cls.u1
         try:
-            serialized = json.dumps(self.user_json)
-        except:
-            actual = 0
-        self.assertTrue(1 == actual)
+            os.remove("file.json")
+        except FileNotFoundError:
+            pass
 
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_json_class(self):
-        """... to_json should include class key with value User"""
-        self.user_json = self.user.to_json()
-        actual = None
-        if self.user_json['__class__']:
-            actual = self.user_json['__class__']
-        expected = 'User'
-        self.assertEqual(expected, actual)
+    def test_style_check(self):
+        """tests pep8 style"""
+        style = pep8.StyleGuide(quiet=True)
+        p = style.check_files(['models/engine/file_storage.py'])
+        self.assertEqual(p.total_errors, 0, "fix pep8")
 
-    def test_email_attribute(self):
-        """... add email attribute"""
-        self.user.email = "bettyholbertn@gmail.com"
-        if hasattr(self.user, 'email'):
-            actual = self.user.email
-        else:
-            actual = ''
-        expected = "bettyholbertn@gmail.com"
-        self.assertEqual(expected, actual)
+    def test_is_subclass(self):
+        """check that class of instance is a subclass of BaseModel"""
+        self.assertTrue(issubclass(self.u1.__class__, BaseModel), True)
+
+    def test_has_attributes(self):
+        """check that all class attribute have appropriate values"""
+        self.assertTrue('email' in self.u1.__dict__)
+        self.assertTrue('id' in self.u1.__dict__)
+        self.assertTrue('created_at' in self.u1.__dict__)
+        self.assertTrue('updated_at' in self.u1.__dict__)
+        self.assertTrue('password' in self.u1.__dict__)
+        self.assertTrue('first_name' in self.u1.__dict__)
+        self.assertTrue('last_name' in self.u1.__dict__)
+
+    def test_attribute_type(self):
+        """check that all class attribute have appropriate values"""
+        self.assertIsInstance(self.u1, User)
+        self.assertIsInstance(self.u1, BaseModel)
+        self.assertIsInstance(self.u1.email, str)
+        self.assertIsInstance(self.u1.password, str)
+        self.assertIsInstance(self.u1.first_name, str)
+        self.assertIsInstance(self.u1.last_name, str)
+
+    def test_checking_for_functions(self):
+        """check docstrings for existing functions"""
+        self.assertIsNotNone(User.__doc__)
+
+    def test_save(self):
+        """check docstrings for existing functions"""
+        self.u1.save()
+        self.assertNotEqual(self.u1.created_at, self.u1.updated_at)
+
+    def test_to_dict(self):
+        """check to_dict method"""
+        self.assertEqual('to_dict' in dir(self.u1), True)
 
 if __name__ == '__main__':
-    unittest.main
+    unittest.main()

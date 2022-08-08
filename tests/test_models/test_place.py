@@ -1,140 +1,92 @@
 #!/usr/bin/python3
-"""
-Unit Test for Place Class
-"""
-from datetime import datetime
-import inspect
-import json
-import models
-from os import environ, stat
-import pep8
+"""Unit tests for class Place"""
 import unittest
+import pep8
+import os
+from models.base_model import BaseModel
+from models.place import Place
 
-Place = models.place.Place
-BaseModel = models.base_model.BaseModel
-STORAGE_TYPE = environ.get('HBNB_TYPE_STORAGE')
 
-
-class TestPlaceDocs(unittest.TestCase):
-    """Class for testing BaseModel docs"""
-
-    all_funcs = inspect.getmembers(Place, inspect.isfunction)
+class TestPlace(unittest.TestCase):
+    """testing class Place"""
+    @classmethod
+    def setUp(cls):
+        """setup instance"""
+        cls.p1 = Place()
+        cls.p1.city_id = "Richmond"
+        cls.p1.user_id = "VAisforLovers"
+        cls.p1.name = "Blue Ridge Mountains"
+        cls.p1.description = "lots of nature"
+        cls.p1.number_rooms = 12
+        cls.p1.number_bathrooms = 0
+        cls.p1.max_guest = 50
+        cls.p1.price_by_night = 100
+        cls.p1.latitude = 3.0
+        cls.p1.longitude = 11.0
+        cls.p1.amenity_ids = []
 
     @classmethod
-    def setUpClass(cls):
-        print('\n\n.................................')
-        print('..... Testing Documentation .....')
-        print('........   Place Class   ........')
-        print('.................................\n\n')
-
-    def test_doc_file(self):
-        """... documentation for the file"""
-        expected = '\nPlace Class from Models Module\n'
-        actual = models.place.__doc__
-        self.assertEqual(expected, actual)
-
-    def test_doc_class(self):
-        """... documentation for the class"""
-        expected = 'Place class handles all application places'
-        actual = Place.__doc__
-        self.assertEqual(expected, actual)
-
-    def test_all_function_docs(self):
-        """... tests for ALL DOCS for all functions in db_storage file"""
-        all_functions = TestPlaceDocs.all_funcs
-        for function in all_functions:
-            self.assertIsNotNone(function[1].__doc__)
-
-    def test_pep8_place(self):
-        """... place.py conforms to PEP8 Style"""
-        pep8style = pep8.StyleGuide(quiet=True)
-        errors = pep8style.check_files(['models/place.py'])
-        self.assertEqual(errors.total_errors, 0, errors.messages)
-
-    def test_file_is_executable(self):
-        """... tests if file has correct permissions so user can execute"""
-        file_stat = stat('models/place.py')
-        permissions = str(oct(file_stat[0]))
-        actual = int(permissions[5:-2]) >= 5
-        self.assertTrue(actual)
-
-
-class TestPlaceInstances(unittest.TestCase):
-    """testing for class instances"""
-
-    @classmethod
-    def setUpClass(cls):
-        print('\n\n.................................')
-        print('....... Testing Functions .......')
-        print('.........  Place Class  .........')
-        print('.................................\n\n')
-
-    def setUp(self):
-        """initializes new place for testing"""
-        self.place = Place()
-
-    def test_instantiation(self):
-        """... checks if Place is properly instantiated"""
-        self.assertIsInstance(self.place, Place)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_to_string(self):
-        """... checks if BaseModel is properly casted to string"""
-        my_str = str(self.place)
-        my_list = ['Place', 'id', 'created_at']
-        actual = 0
-        for sub_str in my_list:
-            if sub_str in my_str:
-                actual += 1
-        self.assertTrue(3 == actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_instantiation_no_updated(self):
-        """... should not have updated attribute"""
-        my_str = str(self.place)
-        actual = 0
-        if 'updated_at' in my_str:
-            actual += 1
-        self.assertTrue(0 == actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_updated_at(self):
-        """... save function should add updated_at attribute"""
-        self.place.save()
-        actual = type(self.place.updated_at)
-        expected = type(datetime.now())
-        self.assertEqual(expected, actual)
-
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_to_json(self):
-        """... to_json should return serializable dict object"""
-        self.place_json = self.place.to_json()
-        actual = 1
+    def tearDown(cls):
+        """delete instance"""
+        del cls.p1
         try:
-            serialized = json.dumps(self.place_json)
-        except:
-            actual = 0
-        self.assertTrue(1 == actual)
+            os.remove("file.json")
+        except FileNotFoundError:
+            pass
 
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
-    def test_json_class(self):
-        """... to_json should include class key with value Place"""
-        self.place_json = self.place.to_json()
-        actual = None
-        if self.place_json['__class__']:
-            actual = self.place_json['__class__']
-        expected = 'Place'
-        self.assertEqual(expected, actual)
+    def test_style_check(self):
+        """tests pep8 style"""
+        style = pep8.StyleGuide(quiet=True)
+        p = style.check_files(['models/place.py'])
+        self.assertEqual(p.total_errors, 0, "fix pep8")
 
-    def test_guest_attribute(self):
-        """... add guest attribute"""
-        self.place.max_guest = 3
-        if hasattr(self.place, 'max_guest'):
-            actual = self.place.max_guest
-        else:
-            actual = ''
-        expected = 3
-        self.assertEqual(expected, actual)
+    def test_is_subclass(self):
+        """check that class of instance is a subclass of BaseModel"""
+        self.assertTrue(issubclass(self.p1.__class__, BaseModel), True)
+
+    def test_has_attributes(self):
+        """check that instance has all class attributes"""
+        self.assertTrue('id' in self.p1.__dict__)
+        self.assertTrue('created_at' in self.p1.__dict__)
+        self.assertTrue('updated_at' in self.p1.__dict__)
+        self.assertTrue('city_id' in self.p1.__dict__)
+        self.assertTrue('user_id' in self.p1.__dict__)
+        self.assertTrue('name' in self.p1.__dict__)
+        self.assertTrue('description' in self.p1.__dict__)
+        self.assertTrue('number_rooms' in self.p1.__dict__)
+        self.assertTrue('number_bathrooms' in self.p1.__dict__)
+        self.assertTrue('max_guest' in self.p1.__dict__)
+        self.assertTrue('price_by_night' in self.p1.__dict__)
+        self.assertTrue('latitude' in self.p1.__dict__)
+        self.assertTrue('longitude' in self.p1.__dict__)
+        self.assertTrue('amenity_ids' in self.p1.__dict__)
+
+    def test_attribute_type(self):
+        """check that all class attribute have appropriate values"""
+        self.assertIsInstance(self.p1, BaseModel)
+        self.assertIsInstance(self.p1, Place)
+        self.assertIsInstance(self.p1.name, str)
+        self.assertIsInstance(self.p1.description, str)
+        self.assertIsInstance(self.p1.number_rooms, int)
+        self.assertIsInstance(self.p1.number_bathrooms, int)
+        self.assertIsInstance(self.p1.max_guest, int)
+        self.assertIsInstance(self.p1.price_by_night, int)
+        self.assertIsInstance(self.p1.latitude, float)
+        self.assertIsInstance(self.p1.longitude, float)
+        self.assertIsInstance(self.p1.amenity_ids, list)
+
+    def test_checking_for_functions(self):
+        """check docstrings for existing functions"""
+        self.assertIsNotNone(Place.__doc__)
+
+    def test_save(self):
+        """check save method"""
+        self.p1.save()
+        self.assertNotEqual(self.p1.created_at, self.p1.updated_at)
+
+    def test_to_dict(self):
+        """check to_dict method"""
+        self.assertEqual('to_dict' in dir(self.p1), True)
 
 if __name__ == '__main__':
-    unittest.main
+    unittest.main()
